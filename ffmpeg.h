@@ -443,4 +443,8 @@ FilterGraph *init_simple_filtergraph(InputStream *ist, OutputStream *ost);
 
 int ffmpeg_parse_options(int argc, char **argv);
 
+void init_ffmpeg();
+void init_ffmpeg_opt();
+int ffmpeg(int argc, char **argv);
+
 #endif /* FFMPEG_H */

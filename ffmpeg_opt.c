@@ -2867,3 +2867,42 @@ const OptionDef options[] = {
 
     { NULL, },
 };
+
+void init_ffmpeg_opt()
+{
+    // ffmpeg_opt.c
+    vstats_filename = NULL;
+
+    audio_drift_threshold = 0.1;
+    dts_delta_threshold   = 10;
+    dts_error_threshold   = 3600*30;
+
+    audio_volume      = 256;
+    audio_sync_method = 0;
+    video_sync_method = VSYNC_AUTO;
+    do_deinterlace    = 0;
+    do_benchmark      = 0;
+    do_benchmark_all  = 0;
+    do_hex_dump       = 0;
+    do_pkt_dump       = 0;
+    copy_ts           = 0;
+    copy_tb           = -1;
+    debug_ts          = 0;
+    exit_on_error     = 0;
+    print_stats       = -1;
+    qp_hist           = 0;
+    stdin_interaction = 1;
+    frame_bits_per_raw_sample = 0;
+
+    intra_only         = 0;
+    file_overwrite     = 0;
+    no_file_overwrite  = 0;
+    video_discard      = 0;
+    intra_dc_precision = 8;
+    do_psnr            = 0;
+    input_sync;
+    override_ffserver  = 0;
+
+    recording_time = INT64_MAX;
+}
+

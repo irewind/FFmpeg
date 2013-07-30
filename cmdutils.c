@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <math.h>
@@ -123,7 +124,7 @@ void exit_program(int ret)
     if (program_exit)
         program_exit(ret);
 
-    exit(ret);
+    pthread_exit(NULL);
 }
 
 double parse_number_or_die(const char *context, const char *numstr, int type,

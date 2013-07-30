@@ -3332,10 +3332,87 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
 {
 }
 
-int main(int argc, char **argv)
+//int main(int argc, char **argv)
+//{
+//    return 0;
+//}
+
+void init_ffmpeg()
+{
+    vstats_file = NULL;
+    run_as_daemon  = 0;
+    video_size = 0;
+    audio_size = 0;
+    subtitle_size = 0;
+    extra_size = 0;
+    nb_frames_dup = 0;
+    nb_frames_drop = 0;
+    decode_error_stat[0] = 0;
+    decode_error_stat[1] = 0;
+
+    current_time = 0;
+    progress_avio = NULL;
+
+    subtitle_out = NULL;
+
+    input_streams = NULL;
+    nb_input_streams = 0;
+    input_files   = NULL;
+    nb_input_files   = 0;
+
+    output_streams = NULL;
+    nb_output_streams = 0;
+    output_files   = NULL;
+    nb_output_files   = 0;
+
+    filtergraphs = NULL;
+    nb_filtergraphs = 0;
+}
+
+#include <pthread.h>
+int g_fflib_busy = 0;
+pthread_mutex_t g_fflib_busy_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void set_fflib_busy(int val)
+{
+    pthread_mutex_lock(&g_fflib_busy_mutex);
+
+    g_fflib_busy = val;
+
+    pthread_mutex_unlock(&g_fflib_busy_mutex);
+}
+
+int get_fflib_busy()
+{
+    int val;
+    pthread_mutex_lock(&g_fflib_busy_mutex);
+
+    val = g_fflib_busy;
+
+    pthread_mutex_unlock(&g_fflib_busy_mutex);
+
+    return val;
+}
+
+typedef struct {
+    int argc;
+    char ** argv;
+} args_t;
+
+
+int fflib(int argc, char **argv)
 {
     int ret;
     int64_t ti;
+
+    // init
+    {
+	//cmdutils.c
+	sws_opts = swr_opts = format_opts = codec_opts = resample_opts = NULL;
+
+	init_ffmpeg();
+	init_ffmpeg_opt();
+    }
 
     register_exit(ffmpeg_cleanup);
 
@@ -3398,5 +3475,34 @@ int main(int argc, char **argv)
         exit_program(254);
 
     exit_program(received_nb_signals ? 255 : 0);
+    return 0;
+}
+
+void* ffmpeg_thread(void * data)
+{
+    args_t *args = (args_t*) data;
+    fflib(args->argc, args->argv);
+}
+
+int ffmpeg(int argc, char **argv)
+{
+    pthread_t thr;
+    args_t args;
+
+    if(get_fflib_busy())
+	return 1;
+
+    args.argc = argc;
+    args.argv = argv;
+    if(pthread_create(&thr, NULL, ffmpeg_thread, (void*) &args))
+    {
+	printf("Failed to create ffmpeg thread\n");
+	return 1;
+    }
+
+    set_fflib_busy(1);
+    pthread_join(thr, NULL);
+    set_fflib_busy(0);
+
     return 0;
 }
